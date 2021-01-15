@@ -20,12 +20,7 @@
             "type": "Object"
         }
     },
-    "outputs": {
-        "managed_service_identity_id": {
-            "type": "string",
-            "value": "[reference(parameters('workflow_name'))]"
-        }
-    },
+    "outputs": {},
     "variables": {},
     "resources": [
         {
@@ -47,7 +42,7 @@
                             "recurrence": {
                                 "frequency": "Month",
                                 "interval": 1,
-                                "startTime": "2020-12-01T09:00:00Z",
+                                "startTime": "2020-12-01T00:00:00Z",
                                 "timeZone": "UTC"
                             },
                             "type": "Recurrence"
@@ -137,7 +132,8 @@
                             "runAfter": {},
                             "type": "Http"
                         }
-                    }
+                    }, 
+                    "outputs": {}
                 },
                 "parameters": {}
             },
