@@ -1,6 +1,6 @@
 # ANS Unattached Disks Management Automation for Azure
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fans-cloud%2Fpublic-ip-management-automation-azure%2Fmain%2Fazure-deploy.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fans-cloud%2Funattached-disks-management-automation-azure%2Fmain%2Fazure-deploy.json)
 
 
 ## How to deploy
