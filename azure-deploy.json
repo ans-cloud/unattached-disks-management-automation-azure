@@ -1,0 +1,147 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflow_name": {
+            "defaultValue": "ans-unattached-disks-management-automation-la",
+            "type": "String"
+        },
+        "workflow_location": {
+            "defaultValue": "uksouth",
+            "type": "String"
+        },
+        "workflow_tags": {
+            "defaultValue": {
+                "Application": "Unattached Disks Management Automation",
+                "Criticality": "Tier 1",
+                "Owner": "Your Team",
+                "deployedBy": "ARM"
+            },
+            "type": "Object"
+        }
+    },
+    "outputs": {
+        "managed_service_identity_id": {
+            "type": "string",
+            "value": "[reference(parameters('workflow_name'))]"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflow_name')]",
+            "location": "[parameters('workflow_location')]",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "triggers": {
+                        "Recurrence": {
+                            "recurrence": {
+                                "frequency": "Month",
+                                "interval": 1,
+                                "startTime": "2020-12-01T09:00:00Z",
+                                "timeZone": "UTC"
+                            },
+                            "type": "Recurrence"
+                        }
+                    },
+                    "actions": {
+                        "For_each_subscription": {
+                            "actions": {
+                                "For_each_Managed_Disk": {
+                                    "actions": {
+                                        "Condition": {
+                                            "actions": {
+                                                "Delete_Managed_Disk": {
+                                                    "inputs": {
+                                                        "authentication": {
+                                                            "audience": "https://management.azure.com",
+                                                            "type": "ManagedServiceIdentity"
+                                                        },
+                                                        "method": "DELETE",
+                                                        "queries": {
+                                                            "api-version": "2020-06-30"
+                                                        },
+                                                        "uri": "https://management.azure.com@{items('For_each_Managed_Disk')?['id']}"
+                                                    },
+                                                    "runAfter": {},
+                                                    "type": "Http"
+                                                }
+                                            },
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "contains": [
+                                                            "@items('For_each_Managed_Disk')?['properties']?['diskState']",
+                                                            "Unattached"
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "runAfter": {},
+                                            "type": "If"
+                                        }
+                                    },
+                                    "foreach": "@body('Get_Managed_Disks')?['value']",
+                                    "runAfter": {
+                                        "Get_Managed_Disks": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Foreach"
+                                },
+                                "Get_Managed_Disks": {
+                                    "inputs": {
+                                        "authentication": {
+                                            "audience": "https://management.azure.com",
+                                            "type": "ManagedServiceIdentity"
+                                        },
+                                        "method": "GET",
+                                        "queries": {
+                                            "api-version": "2020-06-30"
+                                        },
+                                        "uri": "https://management.azure.com/subscriptions/@{items('For_each_subscription')['subscriptionId']}/providers/Microsoft.Compute/disks"
+                                    },
+                                    "runAfter": {},
+                                    "type": "Http"
+                                }
+                            },
+                            "foreach": "@body('Get_Subscriptions')?['value']",
+                            "runAfter": {
+                                "Get_Subscriptions": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Foreach"
+                        },
+                        "Get_Subscriptions": {
+                            "inputs": {
+                                "authentication": {
+                                    "audience": "https://management.azure.com",
+                                    "type": "ManagedServiceIdentity"
+                                },
+                                "method": "GET",
+                                "queries": {
+                                    "api-version": "2020-01-01"
+                                },
+                                "uri": "https://management.azure.com/subscriptions"
+                            },
+                            "runAfter": {},
+                            "type": "Http"
+                        }
+                    }
+                },
+                "parameters": {}
+            },
+            "tags": "[parameters('workflow_tags')]"
+        }
+    ]
+}
